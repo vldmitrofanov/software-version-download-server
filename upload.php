@@ -19,11 +19,6 @@ class Upload {
 
     private function runUpload($request){
         $latest = "0.0.0";
-        //print_r($_FILES['file']);
-        //print_r($request);
-        //$finfo = finfo_open(FILEINFO_MIME_TYPE);
-        //echo finfo_file($finfo, $_FILES["file"]["tmp_name"]);
-        //finfo_close($finfo);
         $versions = [];
 
         $version_type = empty($request['update_type'])?'patch':$request['update_type'];
@@ -39,8 +34,14 @@ class Upload {
 
         if(
             ($this->platform == 'windows' && $file_type != 'application/zip') ||
-                ($this->platform == 'mac' && $file_type != 'application/octet-stream')
-            ){
+            ($this->platform == 'mac' && $file_type != 'application/octet-stream') || 
+            ($this->platform == 'linux' && (
+                $file_type != 'application/x-gzip' && 
+                $file_type != 'application/x-gtar' && 
+                $file_type !='application/x-tgz')
+            )
+        )
+        {
             header("HTTP/1.1 422 Wrong file type");
             exit;
         }
