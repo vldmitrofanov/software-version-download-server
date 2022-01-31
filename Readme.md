@@ -1,16 +1,18 @@
+copy env-example.php to env.php
+
+fill up tokens in env.php
 
 endpoins:
 
 GET 
-    /mac/download/latest
-    /mac/check
-    /windows/download/latest
-    /windows/check
+    /<platform>/download/latest
+    /<platform>/check
+
+GET /<platform>/check must have 'version' field. Used to check against latest version. Returns array of versions ahead
 
 
 POST
-    /mac
-    /windows
+    /<platform>
 
 POST must have headers:
     Content-Type: multipart/form-data

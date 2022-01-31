@@ -14,6 +14,8 @@ class Download {
     public function download($version = null) {
         if($version == 'latest' || !$version) {
             $this->getLatest();
+        } else {
+            $this->getVersion($version);
         }
     }
 
@@ -37,6 +39,28 @@ class Download {
                 }
             }
             $file_name = $versions[$latest];
+            if(!file_exists(dirname(__FILE__) . '/'. $this->platform . '/' . $file_name)) {
+                echo dirname(__FILE__) . '/'. $this->platform . '/' . $file_name;
+                header("HTTP/1.1 404 Not Found");
+                exit;
+            }
+            $this->downloadZipFile('update.zip', dirname(__FILE__) . '/'. $this->platform . '/' . $file_name);
+        }
+    }
+
+    public function getVersion($version){     
+        $file_name = '';
+        $json_file = dirname(__FILE__) . '/'. $this->platform . '/versions.json';
+
+        if(!file_exists($json_file)){
+            header("HTTP/1.1 404 Not Found");
+            exit;
+        }
+
+        $versions = json_decode(file_get_contents($json_file), true);
+
+        if(is_array($versions)){
+            $file_name = $versions[$version];
             if(!file_exists(dirname(__FILE__) . '/'. $this->platform . '/' . $file_name)) {
                 echo dirname(__FILE__) . '/'. $this->platform . '/' . $file_name;
                 header("HTTP/1.1 404 Not Found");
