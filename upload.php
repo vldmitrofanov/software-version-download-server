@@ -1,29 +1,38 @@
-<?php 
+<?php
 
 
 
-class Upload {
+class Upload
+{
     protected $platform;
     protected $route;
 
-    public function __construct($platform, $route, $headers = []){
+    public function __construct($platform, $route, $headers = [])
+    {
         $this->platform = $platform;
         $this->route = $route;
     }
-   
-    public function run($request) {
-        if($_FILES["file"]) {
+
+    public function run($request)
+    {
+        if ($_FILES["file"]) {
             $this->runUpload($request);
-        }       
+        }
     }
 
-    private function runUpload($request){
+    private function runUpload($request)
+    {
         $latest = "0.0.0";
         $versions = [];
+        $version_provided = false;
 
-        $version_type = empty($request['update_type'])?'patch':$request['update_type'];
+        $version_type = empty($request['update_type']) ? 'patch' : $request['update_type'];
+        if (!empty($request['version']) && preg_match('@^\d+\.\d+\.\d+$@', $request['version'])) {
+            $latest = $request['version'];
+            $version_provided = true;
+        }
 
-        if(!empty($_FILES['file']['error'])){
+        if (!empty($_FILES['file']['error'])) {
             header("HTTP/1.1 422 Upload error");
             exit;
         }
@@ -32,61 +41,69 @@ class Upload {
         $file_type = finfo_file($finfo, $_FILES["file"]["tmp_name"]);
         finfo_close($finfo);
 
-        if(
+        if (
             ($this->platform == 'windows' && $file_type != 'application/zip') ||
-            ($this->platform == 'mac' && $file_type != 'application/octet-stream') || 
-            ($this->platform == 'linux' && (
-                $file_type != 'application/x-gzip' && 
-                $file_type != 'application/x-gtar' && 
-                $file_type !='application/x-tgz')
+            ($this->platform == 'mac' && $file_type != 'application/octet-stream') ||
+            ($this->platform == 'linux' && ($file_type != 'application/x-gzip' &&
+                $file_type != 'application/x-gtar' &&
+                $file_type != 'application/x-tgz')
             )
-        )
-        {
+        ) {
             header("HTTP/1.1 422 Wrong file type");
             exit;
         }
 
-        $new_file_path = dirname(__FILE__) . '/'. $this->platform . '/' . $_FILES["file"]["name"];
+        $new_file_path = dirname(__FILE__) . '/' . $this->platform . '/' . $_FILES["file"]["name"];
 
-        if(file_exists($new_file_path)){
+        if (file_exists($new_file_path)) {
             header("HTTP/1.1 422 File exists");
             exit;
         }
 
         move_uploaded_file($_FILES["file"]["tmp_name"], $new_file_path);
 
-        $json_file = dirname(__FILE__) . '/'. $this->platform . '/versions.json';
-        if(file_exists($json_file)){
+        $json_file = dirname(__FILE__) . '/' . $this->platform . '/versions.json';
+        if (file_exists($json_file)) {
             $versions = json_decode(file_get_contents($json_file), true);
-        
-            if(is_array($versions)){
-                foreach($versions as $key => $f){
-                    if(version_compare($key, $latest) == 1) {
-                        $latest = $key;
+
+            if (is_array($versions)) {
+                foreach ($versions as $key => $f) {
+                    if (!$version_provided) {
+                        if (version_compare($key, $latest) == 1) {
+                            $latest = $key;
+                        }
+                    } else {
+                        if (version_compare($key, $latest) == 0) {
+                            header("HTTP/1.1 422 Version exists");
+                            unlink($new_file_path);
+                            exit;
+                        }
                     }
                 }
             }
         }
-        
+
         $ver = explode('.', $latest);
 
-        switch($version_type){
-            case 'patch':
-                $ver[2]++;
-                break;
-            case 'minor':
-                $ver[1]++;
-                $ver[2] = 0;
-                break;
-            case 'major':
-                $ver[0]++;
-                $ver[1] = 0;
-                $ver[2] = 0;
+        if (!$version_provided) {
+            switch ($version_type) {
+                case 'patch':
+                    $ver[2]++;
+                    break;
+                case 'minor':
+                    $ver[1]++;
+                    $ver[2] = 0;
+                    break;
+                case 'major':
+                    $ver[0]++;
+                    $ver[1] = 0;
+                    $ver[2] = 0;
+            }
         }
 
-        $ver = implode('.', $ver);
+        $ver = !$version_provided ? implode('.', $ver) : $latest;
         $versions[$ver] = $_FILES["file"]["name"];
         krsort($versions);
-        file_put_contents(dirname(__FILE__) . '/'. $this->platform . '/versions.json', json_encode($versions));
+        file_put_contents(dirname(__FILE__) . '/' . $this->platform . '/versions.json', json_encode($versions));
     }
 }
