@@ -7,7 +7,7 @@ define('ENV_TOKENS', [
 ]);
 
 define('ENV_PLATFORMS', [
-    'mac',
-    'windows',
+    'darwin',
+    'win32',
     'linux'
 ]);

@@ -6,6 +6,21 @@ class Upload
 {
     protected $platform;
     protected $route;
+    protected $filetypes = [
+        'win32' => ['application/zip'],
+        'mac' => ['application/octet-stream'],
+        'darwin' => ['application/octet-stream'],
+        'linux' => [
+            'application/x-gzip',
+            'application/x-gtar',
+            'application/x-tgz'
+        ],
+        'deb64' => [
+            'application/x-gzip',
+            'application/x-gtar',
+            'application/x-tgz'
+        ],
+    ];
 
     public function __construct($platform, $route, $headers = [])
     {
@@ -41,14 +56,7 @@ class Upload
         $file_type = finfo_file($finfo, $_FILES["file"]["tmp_name"]);
         finfo_close($finfo);
 
-        if (
-            ($this->platform == 'windows' && $file_type != 'application/zip') ||
-            ($this->platform == 'mac' && $file_type != 'application/octet-stream') ||
-            ($this->platform == 'linux' && ($file_type != 'application/x-gzip' &&
-                $file_type != 'application/x-gtar' &&
-                $file_type != 'application/x-tgz')
-            )
-        ) {
+        if (!empty($this->filetypes[$this->platform]) && !in_array($file_type, $this->filetypes[$this->platform])) {
             header("HTTP/1.1 422 Wrong file type");
             exit;
         }
