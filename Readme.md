@@ -33,7 +33,7 @@ POST /<platform> must have headers:
 ```
 ```
 POST /<platform> may have 'file' field:
-    for mac dmg
+    for darwin dmg
     for windows zip
     for linux tar.gz
 ```

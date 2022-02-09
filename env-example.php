@@ -9,5 +9,5 @@ define('ENV_TOKENS', [
 define('ENV_PLATFORMS', [
     'darwin',
     'win32',
-    'linux'
+    'deb64'
 ]);

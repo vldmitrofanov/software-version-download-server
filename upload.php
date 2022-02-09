@@ -8,12 +8,9 @@ class Upload
     protected $route;
     protected $filetypes = [
         'win32' => ['application/zip'],
-        'mac' => ['application/octet-stream'],
-        'darwin' => ['application/octet-stream'],
-        'linux' => [
-            'application/x-gzip',
-            'application/x-gtar',
-            'application/x-tgz'
+        'darwin' => [
+            'application/octet-stream' ,
+            'application/zlib'
         ],
         'deb64' => [
             'application/x-gzip',

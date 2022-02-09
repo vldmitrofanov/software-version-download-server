@@ -1,4 +1,4 @@
-/mac/*
-/windows/*
+/darwin/*
+/win32/*
 env.php
 notes.txt
